@@ -2,6 +2,7 @@
 
 """
 
+from pathlib import Path
 import logging
 import os
 
@@ -13,8 +14,6 @@ from flask import Flask, redirect
 
 
 _logger = logging.getLogger(__name__)
-__version__ = get_distribution("seqrepo-rest-service").version
-
 
 def main():
     coloredlogs.install(level="INFO")
@@ -28,7 +27,7 @@ def main():
     spec_files = []
 
     # seqrepo interface
-    spec_fn = resource_filename(__name__, "seqrepo/openapi.yaml")
+    spec_fn = f"seqrepo_rest_service/seqrepo/openapi.yaml"
     cxapp.add_api(spec_fn,
                   validate_responses=True,
                   strict_validation=True)
@@ -41,17 +40,17 @@ def main():
 
 
     # refget interface
-    spec_fn = resource_filename(__name__, "refget/refget-openapi.yaml")
+    spec_fn = f"seqrepo_rest_service/refget/refget-openapi.yaml"
     cxapp.add_api(spec_fn,
                   validate_responses=True,
                   strict_validation=True)
     spec_files += [spec_fn]
-     
+
     @cxapp.route('/refget')
     def refget_ui():
         return redirect("/refget/1/ui/")
 
-    
+
     _logger.info("Also watching " + str(spec_files))
     cxapp.run(host="0.0.0.0",
               extra_files=spec_files)

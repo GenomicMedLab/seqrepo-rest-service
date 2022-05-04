@@ -110,7 +110,8 @@ With range:
 
 Once installed as above, you should be able to:
 
-    $ SEQREPO_DIR=/usr/local/share/seqrepo/latest seqrepo-rest-service
+    $ SEQREPO_DIR=/usr/local/share/seqrepo/latest 
+    python3 app.py
 
 The navigate to the URL shown in the console output.
 
