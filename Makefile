@@ -5,17 +5,15 @@
 .PRECIOUS:
 .SUFFIXES:
 
-SHELL:=/bin/bash -e -o pipefail
+SHELL:=zsh -eu -o pipefail -o null_glob
 SELF:=$(firstword $(MAKEFILE_LIST))
 
-PKG=biocommons.seqrepo
-PKGD=$(subst .,/,${PKG})
-PYV:=3.8
-VEDIR=venv/${PYV}
+VE_DIR=venv
 
 TEST_DIRS:=tests
-DOC_TESTS:=doc hgvs ./README.rst
+DOC_TESTS:=src ./README.md
 
+export DOCKER_BUILDKIT=1
 
 ############################################################################
 #= BASIC USAGE
@@ -32,33 +30,43 @@ help:
 #=> devready: create venv, install prerequisites, install pkg in develop mode
 .PHONY: devready
 devready:
-	make ${VEDIR} && source ${VEDIR}/bin/activate && make develop
+	make ${VE_DIR} && source ${VE_DIR}/bin/activate && make develop
 	@echo '#################################################################################'
-	@echo '###  Do not forget to `source ${VEDIR}/bin/activate` to use this environment  ###'
+	@echo '###  Do not forget to `source ${VE_DIR}/bin/activate` to use this environment  ###'
 	@echo '#################################################################################'
 
 #=> venv: make a Python 3 virtual environment
-venv/%:
-	python$* -mvenv $@; \
+${VE_DIR}:
+	python3 -mvenv $@; \
 	source $@/bin/activate; \
-	python -m ensurepip --upgrade; \
-	pip install --upgrade pip setuptools
+	python3 -m ensurepip --upgrade; \
+	pip install --upgrade pip setuptools wheel
 
 #=> develop: install package in develop mode
 .PHONY: develop
 develop:
-	pip install -e .[dev]
+	pip install -e ".[dev]"
 
 #=> install: install package
-#=> bdist bdist_egg bdist_wheel build sdist: distribution options
-.PHONY: bdist bdist_egg bdist_wheel build build_sphinx sdist install
-bdist bdist_egg bdist_wheel build sdist install: %:
-	python setup.py $@
+.PHONY: install
+install:
+	pip install .
 
+#=> build: make sdist and wheel
+.PHONY: build
+build: %:
+	python -m build
 
 ############################################################################
 #= TESTING
 # see test configuration in setup.cfg
+
+#=> cqa: execute code quality tests
+cqa:
+	flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
+	isort --profile black --check src
+	ruff format --check src
+	bandit -ll -r src
 
 #=> test: execute tests
 #=> test-code: test code (including embedded doctests)
@@ -69,13 +77,13 @@ bdist bdist_egg bdist_wheel build sdist install: %:
 # => extra fx issues mapping models normalization parametrize pnd quick regression validation
 .PHONY: test test-code test-docs
 test:
-	python setup.py pytest
-test-code:
-	python setup.py pytest --addopts="${TEST_DIRS}"
+	pytest
 test-docs:
-	python setup.py pytest --addopts="${DOC_TESTS}"
+	pytest docs
+test-code:
+	pytest src
 test-%:
-	python setup.py pytest --addopts="-m '$*' ${TEST_DIRS}"
+	pytest -m '$*' src
 
 #=> tox -- run all tox tests
 tox:
@@ -85,14 +93,18 @@ tox:
 ############################################################################
 #= UTILITY TARGETS
 
-# N.B. Although code is stored in github, I use hg and hg-git on the command line
-#=> reformat: reformat code with yapf and commit
+#=> reformat: reformat code with ruff/isort and commit
 .PHONY: reformat
 reformat:
-	@if hg sum | grep -qL '^commit:.*modified'; then echo "Repository not clean" 1>&2; exit 1; fi
-	@if hg sum | grep -qL ' applied'; then echo "Repository has applied patches" 1>&2; exit 1; fi
-	yapf -i -r "${PKGD}" tests
-	hg commit -m "reformatted with yapf"
+	@if ! git diff --cached --exit-code >/dev/null; then echo "Repository not clean" 1>&2; exit 1; fi
+	ruff format src tests
+	isort src tests
+	git commit -a -m "reformatted with ruff and isort"
+
+#=> rename: rename files and substitute content for new repo name
+.PHONY: rename
+rename:
+	./sbin/rename-package
 
 #=> docs -- make sphinx docs
 .PHONY: docs
@@ -100,36 +112,51 @@ docs: develop
 	# RTD makes json. Build here to ensure that it works.
 	make -C doc html json
 
+#=> docker-image: build docker image
+docker-image:
+	docker build -t biocommons/seqrepo-rest-service .
+	TAG=$$(git describe --tags | head -1); if [ -n "$$TAG" ]; then \
+		docker tag biocommons/seqrepo-rest-service:latest biocommons/seqrepo-rest-service:$$TAG; \
+		echo "Created biocommons/seqrepo-rest-service:$$TAG"; \
+	fi
+
 ############################################################################
 #= CLEANUP
 
 #=> clean: remove temporary and backup files
 .PHONY: clean
 clean:
-	find . \( -name \*~ -o -name \*.bak \) -print0 | xargs -0r rm
+	rm -frv **/*~ **/*.bak
 
 #=> cleaner: remove files and directories that are easily rebuilt
 .PHONY: cleaner
 cleaner: clean
-	rm -fr .cache *.egg-info build dist doc/_build htmlcov
-	find . \( -name \*.pyc -o -name \*.orig -o -name \*.rej \) -print0 | xargs -0r rm
-	find . -name __pycache__ -print0 | xargs -0r rm -fr
+	rm -frv .cache build dist docs/_build
+	rm -frv **/__pycache__
+	rm -frv **/*.egg-info
+	rm -frv **/*.pyc
+	rm -frv **/*.orig
+	rm -frv **/*.rej
 
 #=> cleanest: remove files and directories that require more time/network fetches to rebuild
 .PHONY: cleanest
 cleanest: cleaner
-	rm -fr .eggs .tox venv
+	rm -frv .eggs .tox venv
 
+#=> distclean: remove untracked files and other detritus
+.PHONY: distclean
+distclean: cleanest
+	git clean -df
 
 ## <LICENSE>
-## Copyright 2016 Source Code Committers
-## 
+## Copyright 2023 Source Code Committers
+##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
 ## You may obtain a copy of the License at
-## 
+##
 ##     http://www.apache.org/licenses/LICENSE-2.0
-## 
+##
 ## Unless required by applicable law or agreed to in writing, software
 ## distributed under the License is distributed on an "AS IS" BASIS,
 ## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
