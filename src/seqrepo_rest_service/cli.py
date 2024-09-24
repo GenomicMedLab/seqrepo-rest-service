@@ -36,7 +36,9 @@ def _parse_opts():
     opts = ap.parse_args()
     return opts
 
+
 cxapp = connexion.App(__name__, debug=True)
+
 
 def main():
     coloredlogs.install(level="INFO")
