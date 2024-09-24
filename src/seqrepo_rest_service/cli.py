@@ -37,23 +37,30 @@ def _parse_opts():
     return opts
 
 
+cxapp = connexion.App(__name__, debug=True)
+
+
 def main():
     coloredlogs.install(level="INFO")
 
-    if "SEQREPO_DIR" in os.environ:
-        _logger.warn("SEQREPO_DIR environment variable is now ignored")
+    if "SEQREPO_EB_PROD" in os.environ:
+        # AWS Elastic Beanstalk env
+        seqrepo_dir = os.environ.get("SEQREPO_ROOT_DIR", "/usr/local/share/seqrepo/2024-02-20")
+    else:
+        # Local env
+        if "SEQREPO_ROOT_DIR" in os.environ:
+            _logger.warn("SEQREPO_ROOT_DIR environment variable is now ignored")
 
-    opts = _parse_opts()
+        opts = _parse_opts()
 
-    seqrepo_dir = opts.SEQREPO_INSTANCE_DIR
-    if opts.wait_for_path:
-        while not seqrepo_dir.exists():
-            _logger.info(f"{seqrepo_dir}: waiting for existence")
-            time.sleep(WAIT_POLL_PERIOD)
-        _logger.info(f"{seqrepo_dir}: path found")
-    _ = SeqRepo(seqrepo_dir.as_posix())  # test opening
+        seqrepo_dir = opts.SEQREPO_INSTANCE_DIR
+        if opts.wait_for_path:
+            while not seqrepo_dir.exists():
+                _logger.info(f"{seqrepo_dir}: waiting for existence")
+                time.sleep(WAIT_POLL_PERIOD)
+            _logger.info(f"{seqrepo_dir}: path found")
+        _ = SeqRepo(seqrepo_dir.as_posix())  # test opening
 
-    cxapp = connexion.App(__name__, debug=True)
     cxapp.app.url_map.strict_slashes = False
     cxapp.app.config["seqrepo_dir"] = seqrepo_dir
 
@@ -79,8 +86,11 @@ def main():
         return redirect("/refget/1/ui/")
 
     _logger.info("Also watching " + str(spec_files))
-    cxapp.run(host="0.0.0.0", extra_files=spec_files)
 
+    return cxapp.app, spec_files
+
+
+app, spec_files = main()
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", extra_files=spec_files)
