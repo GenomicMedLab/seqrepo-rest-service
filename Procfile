@@ -1,1 +1,1 @@
-web: seqrepo-rest-service /usr/local/share/seqrepo/2024-02-20
+web:  cd src && gunicorn seqrepo_rest_service.cli:app --bind 0.0.0.0:5000
