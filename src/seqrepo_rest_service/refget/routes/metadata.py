@@ -3,7 +3,12 @@ import logging
 from connexion import NoContent, request
 
 from seqrepo_rest_service.threadglobals import get_seqrepo
-from seqrepo_rest_service.utils import get_sequence_id, base64url_to_hex, problem, valid_content_types
+from seqrepo_rest_service.utils import (
+    get_sequence_id,
+    base64url_to_hex,
+    problem,
+    valid_content_types,
+)
 
 
 _logger = logging.getLogger(__name__)
@@ -14,7 +19,7 @@ def get(id):
     if accept_header and accept_header not in valid_content_types:
         _logger.warn(f"{accept_header} not valid")
         return problem(406, "Invalid Accept header")
-    
+
     sr = get_seqrepo()
     seq_id = get_sequence_id(sr, id)
     if not seq_id:
@@ -30,10 +35,7 @@ def get(id):
         "md5": md5_id,
         "trunc512": base64url_to_hex(seq_id),
         "length": seqinfo["len"],
-        "aliases": [
-            {"naming_authority": a["namespace"], "alias": a["alias"]}
-            for a in aliases
-            ]
-        }
+        "aliases": [{"naming_authority": a["namespace"], "alias": a["alias"]} for a in aliases],
+    }
 
     return {"metadata": md}, 200

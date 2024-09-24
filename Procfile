@@ -1,1 +1,1 @@
-web: python3 app.py
+web: seqrepo-rest-service /usr/local/share/seqrepo/2024-02-20
