@@ -1,15 +1,15 @@
 import biocommons.seqrepo
 import bioutils
-from importlib import metadata
 
-from ...threadglobals import get_seqrepo
+from seqrepo_rest_service import __version__
+from seqrepo_rest_service.threadglobals import get_seqrepo
 
 
 def get():
     sr = get_seqrepo()
 
     return {
-        "version": metadata.version("seqrepo-rest-service"),
+        "version": __version__,
         "url": "https://github.com/biocommons/seqrepo-rest-service/",
         "dependencies": {
             "seqrepo": {
