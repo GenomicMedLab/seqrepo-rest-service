@@ -10,11 +10,11 @@ RUN apt update && apt upgrade -y && apt install -y \
     python3-pip \
     zip
 
-RUN --mount=type=cache,target=/root/.cache/pip pip3 install -U setuptools pip
+RUN --mount=type=cache,target=/root/.cache/pip python3 -m pip install -U setuptools "pip>=26.2.2"
 
 COPY . /app/
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache/pip pip install -e .
+RUN --mount=type=cache,target=/root/.cache/pip python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps -e .
 
 EXPOSE 5000
 

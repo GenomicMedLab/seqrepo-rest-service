@@ -6,10 +6,9 @@ authors = [
 description = "SeqRepo REST Service"
 readme = "README.md"
 license = { file="LICENSE.txt" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: Apache Software License",
