@@ -30,6 +30,24 @@ devready: ## Prepare local dev env: Create virtual env, install the git hooks (p
 	uv run prek install -f
 	$(call INFO_MESSAGE, Activate the virtual env with \`source .venv/bin/activate\`)
 
+#=> venv: make a Python 3 virtual environment
+${VE_DIR}:
+	python3 -mvenv $@; \
+	source $@/bin/activate; \
+	python3 -m ensurepip --upgrade; \
+	python3 -m pip install --upgrade "pip>=26.2.2" setuptools wheel
+
+#=> develop: install package in develop mode
+.PHONY: develop
+develop:
+	pip install -e ".[dev]"
+
+#=> install: install package
+.PHONY: install
+install:
+	pip install .
+
+#=> build: make sdist and wheel
 .PHONY: build
 build: ## Build package
 	$(call INFO_MESSAGE, "Build package")
