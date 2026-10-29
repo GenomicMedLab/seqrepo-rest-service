@@ -24,7 +24,7 @@ paths:
   /sequence/service-info:
     get:
       summary: Retrieve a summary of features this API deployment supports
-      operationId: seqrepo_rest_service.refget.routes.serviceInfo.get
+      operationId: seqrepo_rest_service.refget.routes.service_info.get
       tags:
         - Services
       responses:
@@ -48,7 +48,7 @@ paths:
           description: Display a ping message
         415:
           $ref: '#/components/responses/BadFormat'
-  /sequence/{id}:
+  /sequence/{query}:
     get:
       summary: Get a sequence from a hash
       operationId: seqrepo_rest_service.refget.routes.sequence.get
@@ -58,7 +58,7 @@ paths:
         - Sequence
       parameters:
         - in: path
-          name: id
+          name: query
           description: The identifier to use. Should be a checksum hash identifier
           required: true
           schema:
@@ -115,7 +115,7 @@ paths:
           description: Invalid range request specified
         501:
           description: The specified request is not supported by the server
-  /sequence/{id}/metadata:
+  /sequence/{query}/metadata:
     get:
       summary: Get reference metadata from a hash
       description: Retrieve a metadata about a reference sequence using a hash identifier
@@ -124,7 +124,7 @@ paths:
         - Metadata
       parameters:
         - in: path
-          name: id
+          name: query
           required: true
           description: The identifier to use. Should be a checksum hash
           schema:

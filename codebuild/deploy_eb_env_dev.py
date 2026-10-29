@@ -1,7 +1,8 @@
 """Module for deploying MetaKB EB environment."""
 
-import boto3
 import time
+
+import boto3
 
 elasticbeanstalk = boto3.client("elasticbeanstalk")
 servicecatalog = boto3.client("servicecatalog")
@@ -9,7 +10,7 @@ terminate_time = 12
 eb_app_name = "Seqrepo"
 eb_env_name = "Seqrepo-dev-env"
 sc_product_id = "prod-qg2twc66t544g"
-print(f"Launching new Service Catalog Product for staging environment: " f"{eb_app_name}")
+print(f"Launching new Service Catalog Product for staging environment: {eb_app_name}")
 sc_product_artifacts = servicecatalog.list_provisioning_artifacts(ProductId=sc_product_id)
 for artifact in sc_product_artifacts["ProvisioningArtifactDetails"]:
     if artifact["Active"]:
@@ -25,12 +26,12 @@ try:
             {"Key": "TerminateTime", "Value": str(terminate_time)},
         ],
     )
-    eb_provisioned_product_Id = eb_provisioned_product["RecordDetail"]["ProvisionedProductId"]
-    product_status = servicecatalog.describe_provisioned_product(Id=eb_provisioned_product_Id)
+    eb_provisioned_product_id = eb_provisioned_product["RecordDetail"]["ProvisionedProductId"]
+    product_status = servicecatalog.describe_provisioned_product(Id=eb_provisioned_product_id)
     eb_provisioned_product_status = product_status["ProvisionedProductDetail"]["Status"]
     while eb_provisioned_product_status == "UNDER_CHANGE":
         time.sleep(10)
-        product_status = servicecatalog.describe_provisioned_product(Id=eb_provisioned_product_Id)
+        product_status = servicecatalog.describe_provisioned_product(Id=eb_provisioned_product_id)
         eb_provisioned_product_status = product_status["ProvisionedProductDetail"]["Status"]
         print(eb_provisioned_product_status)
 except Exception as e:

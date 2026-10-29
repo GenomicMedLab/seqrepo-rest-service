@@ -1,11 +1,15 @@
-from seqrepo_rest_service import __version__
-from seqrepo_rest_service.threadglobals import get_seqrepo
-
 import biocommons.seqrepo
 import bioutils
 
+from seqrepo_rest_service import __version__
+from seqrepo_rest_service.threadglobals import get_seqrepo
+
 
 def get():
+    """Return refget capabilities and dependency information.
+
+    :return: JSON-compatible service information.
+    """
     sr = get_seqrepo()
 
     return {
@@ -22,7 +26,7 @@ def get():
             },
             "seqrepo": {
                 "version": biocommons.seqrepo.__version__,
-                "root": sr._root_dir,
+                "root": str(sr._root_dir),
                 "url": "https://github.com/biocommons/biocommons.seqrepo/",
             },
             "bioutils": {
