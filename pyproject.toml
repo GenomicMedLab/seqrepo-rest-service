@@ -1,25 +1,33 @@
-[project]
-name = "seqrepo-rest-service"
-authors = [
-    { name = "biocommons contributors", email = "biocommons-dev@googlegroups.com" },
-]
-description = "SeqRepo REST Service"
-readme = "README.md"
-license = { file="LICENSE.txt" }
-requires-python = ">=3.10"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: OS Independent",
-]
-dynamic = ["version"]
-dependencies = [
-    "biocommons.seqrepo ~= 0.6",
-    "coloredlogs",
-    "connexion[swagger-ui] ~= 2.2",
-    "Flask ~= 2.2",
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 80.0", "setuptools_scm[toml] >= 9.0"]
+
+[dependency-groups]
+dev = [
+  # code quality & formatting
+  "deptry>=0.25.1",
+  "mypy>=2.4.0",
+  "nox>=2026.8.17",
+  "prek>=0.5.5",
+  "ruff>=0.17.0",
+  "toml-sort>=0.25.0",
+  "uv-bump>=0.6.0",
+
+  # testing
+  "pytest>=9.1.1",
+  "pytest-cov>=7.1.0",
+  "pytest-recording>=0.14.0",
+  "vcrpy>=8.3.0",
+
+  # documentation
+  "mkdocs>=1.6.1",
+  "mkdocs-awesome-nav>=3.3.0",
+  "mkdocs-material>=9.7.7",
+  "mkdocstrings[python]>=1.0.7",
+
+  # misc dev tools
+  "ipython>=8.0.0",  # biocommons.seqrepo releases pin ipython<9
+  "jupyter>=1.1.1",
 ]
 
 [project]
