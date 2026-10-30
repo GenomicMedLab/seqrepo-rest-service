@@ -27,7 +27,7 @@ def _parse_opts():
     ap.add_argument(
         "SEQREPO_INSTANCE_DIR",
         type=pathlib.Path,
-        help="SeqRepo instance directory (e.g., /usr/local/share/seqrepo/2024-02-20)",
+        help="SeqRepo instance directory (e.g., /usr/local/share/seqrepo/2024-12-20)",
     )
     ap.add_argument(
         "--wait-for-path",
@@ -47,7 +47,7 @@ def _create_app():
     coloredlogs.install(level="INFO")
 
     if "SEQREPO_EB_PROD" in os.environ:
-        seqrepo_dir = os.environ.get("SEQREPO_ROOT_DIR", "/usr/local/share/seqrepo/2024-02-20")
+        seqrepo_dir = os.environ.get("SEQREPO_ROOT_DIR", "/usr/local/share/seqrepo/2024-12-20")
     else:
         for name in ("SEQREPO_DIR", "SEQREPO_ROOT_DIR"):
             if name in os.environ:
