@@ -2,19 +2,18 @@
 
 # docker build -t biocommons/seqrepo-rest-service .
 
-FROM ubuntu:22.04
+FROM python:3.11-slim
 
 RUN apt update && apt upgrade -y && apt install -y \
     curl \
     git \
-    python3-pip \
     zip
 
-RUN --mount=type=cache,target=/root/.cache/pip pip3 install -U setuptools pip
+RUN --mount=type=cache,target=/root/.cache/pip python3 -m pip install -U setuptools "pip>=26.2.2"
 
 COPY . /app/
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache/pip pip install -e .
+RUN --mount=type=cache,target=/root/.cache/pip python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps -e .
 
 EXPOSE 5000
 

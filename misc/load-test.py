@@ -34,14 +34,14 @@ continuously but rather stabilize at a relatively low level on the order of tens
 """
 
 import argparse
+import logging
+import multiprocessing  # as multiprocessing
 import pathlib
+import queue
 import random
 import subprocess
-import logging
-import time
 import sys
-import queue
-import multiprocessing  # as multiprocessing
+import time
 from typing import TextIO
 
 from biocommons.seqrepo import SeqRepo
@@ -56,7 +56,9 @@ def log(log_queue: multiprocessing.Queue, line: str):
 
 def lsof_count(dirname: str) -> int:
     lsof_cmd = ["bash", "-c", f"lsof +D {dirname} | wc -l"]
-    lsof_p = subprocess.Popen(lsof_cmd, stdout=subprocess.PIPE)
+    lsof_p = subprocess.Popen(  # noqa: S603
+        lsof_cmd, stdout=subprocess.PIPE
+    )
     (stdout, _) = lsof_p.communicate()
     stdout = stdout.decode("utf-8").strip()
     return int(stdout)
@@ -126,7 +128,7 @@ class StdOutPipeWorker(multiprocessing.Process):
     Used for synchronized logging between main and sub processes
     """
 
-    def __init__(self, stdout_queue: multiprocessing.Queue, ostream: TextIO = None):
+    def __init__(self, stdout_queue: multiprocessing.Queue, ostream: TextIO | None = None):
         self.stdout_queue = stdout_queue
         self.ostream = ostream if ostream else sys.stdout
         self.stopped = False
@@ -157,8 +159,7 @@ def parse_args(argv):
     ap.add_argument("-u", "--seqrepo-rest-uri", type=str, default="http://localhost:5000/seqrepo")
     ap.add_argument("-m", "--max-accessions", type=int, required=True)
     ap.add_argument("-f", "--fd-cache-size", type=int, default=0)
-    opts = ap.parse_args(argv)
-    return opts
+    return ap.parse_args(argv)
 
 
 def main(argv):
@@ -166,7 +167,7 @@ def main(argv):
 
     sr = SeqRepo(root_dir=opts.seqrepo_path, fd_cache_size=opts.fd_cache_size)
 
-    acs = set(a["alias"] for a in sr.aliases.find_aliases(namespace="RefSeq", alias="NM_%"))
+    acs = {a["alias"] for a in sr.aliases.find_aliases(namespace="RefSeq", alias="NM_%")}
     acs = random.sample(sorted(acs), opts.max_accessions or len(acs))
 
     input_queue = multiprocessing.Queue()
@@ -180,9 +181,7 @@ def main(argv):
     )
     t_filler.start()
 
-    workers = []
-    for _ in range(opts.num_workers):
-        workers.append(MPWorker(input_queue, opts.seqrepo_rest_uri))
+    workers = [MPWorker(input_queue, opts.seqrepo_rest_uri) for _ in range(opts.num_workers)]
 
     lsof_p = None
     print("Starting lsof process")
@@ -207,7 +206,7 @@ def main(argv):
     if lsof_p:
         lsof_p.terminate()
 
-    print(f"Retrieved {len(acs)} seq in {time_diff} seconds ({len(acs)/time_diff} seq/sec)")
+    print(f"Retrieved {len(acs)} seq in {time_diff} seconds ({len(acs) / time_diff} seq/sec)")
 
     # log_worker.stop()
     # log_worker.join()

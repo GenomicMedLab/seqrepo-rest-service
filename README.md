@@ -1,9 +1,22 @@
-# seqrepo-rest-api
+# seqrepo-rest-service
+
+[![Release](https://img.shields.io/github/v/release/biocommons/seqrepo-rest-service)](https://img.shields.io/github/v/release/biocommons/seqrepo-rest-service)
+[![Build status](https://img.shields.io/github/actions/workflow/status/biocommons/seqrepo-rest-service/main.yml?branch=main)](https://github.com/biocommons/seqrepo-rest-service/actions/workflows/main.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/biocommons/seqrepo-rest-service/branch/main/graph/badge.svg)](https://codecov.io/gh/biocommons/seqrepo-rest-service)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/biocommons/seqrepo-rest-service)](https://img.shields.io/github/commit-activity/m/biocommons/seqrepo-rest-service)
+[![License](https://img.shields.io/github/license/biocommons/seqrepo-rest-service)](https://img.shields.io/github/license/biocommons/seqrepo-rest-service)
+[![Docker](https://img.shields.io/docker/pulls/biocommons/seqrepo-rest-service)](https://img.shields.io/docker/pulls/biocommons/seqrepo-rest-service)
+
+## Citation
+
+Hart RK, Prlić A (2020)
+**SeqRepo: A system for managing local collections of biological sequences.**
+PLoS ONE 15(12): e0239883. <https://doi.org/10.1371/journal.pone.0239883>
+
+## Description
 
 Provides SeqRepo and GA4GH RefGet REST interfaces to biological sequences and sequence metadata from an existing
 [seqrepo](https://github.com/biocommons/biocommons.seqrepo/) sequence repository.
-
-## Description
 
 Specific, named biological sequences provide the reference and coordinate
 sysstem for communicating variation and consequential phenotypic changes.
@@ -32,21 +45,35 @@ This repository also implements the [GA4GH refget (v1)
 protocol](https://samtools.github.io/hts-specs/refget.html) at
 `<baseurl>/refget/`.
 
-Released under the Apache License, 2.0.
+This project is a product of the [biocommons](https://biocommons.org/) community.
 
-Links: [Issues](https://github.com/biocommons/seqrepo-rest-service/issues) |
-[Docker
-image](https://cloud.docker.com/u/biocommons/repository/docker/biocommons/seqrepo-rest-service)
+- **Github repository**: <https://github.com/biocommons/seqrepo-rest-service/>
+- **Documentation** <https://biocommons.github.io/seqrepo-rest-service/>
 
+## Python Package Installation
 
-## Citation
+Install from PyPI with `pip install seqrepo-rest-service` or `uv pip install seqrepo-rest-service`
 
-Hart RK, Prlić A (2020)
-**SeqRepo: A system for managing local collections of biological sequences.**
-PLoS ONE 15(12): e0239883. https://doi.org/10.1371/journal.pone.0239883
+### Install Prerequisites
 
+These tools are required to get started:
 
-## Examples
+- [git](https://git-scm.com/): Version control system
+- [GNU make](https://www.gnu.org/software/make/): Current mechanism for consistent invocation of developer tools.
+- [uv](https://docs.astral.sh/uv/): An extremely fast Python package and project manager, written in Rust.
+
+#### MacOS or Linux Systems
+
+- [Install brew](https://brew.sh/)
+- `brew install git make uv`
+
+#### Linux (Debian-based systems)
+
+You may also install using distribution packages:
+
+    sudo apt install git make
+
+Then install uv using the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/).
 
 ### OpenAPI docs
 
@@ -55,7 +82,6 @@ interactive documentation is available at the base url for the
 endpoint.
 
 ![OpenAPI UI Screenshot](docs/images/seqrepo-api-ui.png)
-
 
 ### Fetch Sequence
 
@@ -103,20 +129,77 @@ With range:
       "length": 248956422
     }
 
+## Developer Setup
 
-## Development
+### One-time developer setup
 
-    $ make devready
-    $ source venv/bin/activate
+Create a Python virtual environment, install dependencies, install git hooks (prek), and install an editable package:
+
+    make devready
+
+### Development
+
+**N.B.** Developers are strongly encouraged to use `make` to invoke tools to
+ensure consistency with the CI/CD pipelines.  Type `make` to see a list of
+supported targets.  A subset are listed here:
+
+    » make
+    🌟🌟 biocommons conventional make targets 🌟🌟
+
+    Using these targets promots consistency between local development and ci/cd commands.
+
+    usage: make [target ...]
+
+    BASIC USAGE
+    help                Display help message
+
+    SETUP, INSTALLATION, PACKAGING
+    devready            Prepare local dev env: Create virtual env, install the git hooks (prek)
+    build               Build package
+    publish             publish package to PyPI
+
+    FORMATTING, TESTING, AND CODE QUALITY
+    cqa                 Run code quality assessments
+    test                Test the code with pytest
+    test-coverage       Test the code with pytest and generate coverage report
+    test-matrix         Test with each supported Python version (via nox)
+
+    DOCUMENTATION
+    docs-serve          Build and serve the documentation
+    docs-test           Test if documentation can be built without warnings or errors
+    docs-deploy         Deploy documentation to GitHub Pages
+
+    CLEANUP
+    clean               Remove temporary and backup files
+    cleaner             Remove files and directories that are easily rebuilt
+    cleanest            Remove all files that can be rebuilt
+    distclean           Remove untracked files and other detritus
+
+### Testing
+
+    make test            # tests, no coverage
+    make test-coverage   # tests with coverage; writes coverage.xml
+    make test-matrix     # `make test` on each Python version listed in pyproject.toml classifiers (nox)
+
+`make test` is the test command everywhere: locally, in each nox session, and in each CI matrix leg. One CI leg runs `make test-coverage` and uploads to Codecov instead.
+
+Known limitation: nox does not forward arguments, so `nox -- -k foo` runs the full suite. Run one version with `uv run nox -s tests-3.11`, or a subset on one version with `uv run --isolated --python 3.11 pytest -k foo` (`--isolated` leaves `.venv` untouched).
+
+#### VS Code
+
+Testing → Configure Python Tests → pytest → root directory. No other settings are needed; coverage is off by default, so breakpoints work.
+
+#### Coverage gate
+
+Codecov's `codecov/project` status fails when coverage drops more than 0.5% from the base commit. Make `codecov/project` a required status check in branch protection, or the gate does nothing.
 
 ## Running a local instance
 
 Once installed as above, you should be able to:
 
-    $ seqrepo-rest-service /usr/local/share/seqrepo/2024-02-20
+    $ seqrepo-rest-service /usr/local/share/seqrepo/2024-12-20
 
 The navigate to the URL shown in the console output.
-
 
 ## Building and running a docker image
 
@@ -141,19 +224,20 @@ Invoke the docker image like this this:
     docker run \
       --name seqrepo-rest-service \
       --detach --rm -p 5000:5000 \
-      -v /usr/local/share/seqrepo/2024-02-20:/mnt/seqrepo \
+      -v /usr/local/share/seqrepo/2024-12-20:/mnt/seqrepo \
       biocommons/seqrepo-rest-service \
       seqrepo-rest-service /mnt/seqrepo
 
 Where the command line options are as follows:
-* `--name seqrepo-rest-service:` Assigns the name `seqrepo-rest-service` to the container
-* `--detach:` Runs the container in background and prints the container ID
-* `--rm:` Automatically removes the container when it exits
-* `-p 5000:5000:` Publishes a container’s port(s), `5000:5000`, to the local host
-* `-v /usr/local/share/seqrepo/2024-02-20:/mnt/seqrepo`: Binds the local volume, `/usr/local/share/seqrepo/2024-02-20` to the address `/mnt/seqrepo` within the container
-* `biocommons/seqrepo-rest-service:` Specifies the docker image (as built above)
-* `seqrepo-rest-service:` Specifies the console name or entry point `seqrepo_rest_service.cli:main`
-* `/mnt/seqrepo:` Specifies the SeqRepo instance directory, as corresponding to the volume above
+
+- `--name seqrepo-rest-service:` Assigns the name `seqrepo-rest-service` to the container
+- `--detach:` Runs the container in background and prints the container ID
+- `--rm:` Automatically removes the container when it exits
+- `-p 5000:5000:` Publishes a container’s port(s), `5000:5000`, to the local host
+- `-v /usr/local/share/seqrepo/2024-12-20:/mnt/seqrepo`: Binds the local volume, `/usr/local/share/seqrepo/2024-12-20` to the address `/mnt/seqrepo` within the container
+- `biocommons/seqrepo-rest-service:` Specifies the docker image (as built above)
+- `seqrepo-rest-service:` Specifies the console name or entry point `seqrepo_rest_service.cli:main`
+- `/mnt/seqrepo:` Specifies the SeqRepo instance directory, as corresponding to the volume above
 
 You should then be able to fetch a test sequence like this:
 
